@@ -222,23 +222,73 @@ EOS
   def test_event_is_parsed
     assert_not_nil(@event)
   end
-  
+
   def test_recurrence_rules_should_return_a_recurrence_rule_array
     assert_equal 1, @event.recurrence_rules.length
     assert_kind_of(Icalendar::RRule, @event.recurrence_rules.first)
   end
-  
+
   def test_occurrences_after_with_start_before_start_at_should_return_count_occurrences
     assert_equal 10, @event.occurrences_starting(Time.utc(1997, 9, 2, 8, 30, 0, 0)).length
   end
-                  
-#  def test_occurrences_after_with_start_before_start_at_should_return_an_event_with_the_dtstart_as_the_first_event
-#    assert_equal @event.dtstart.to_s, @event.occurrences_starting(Time.utc(1997, 9, 2, 8, 30, 0, 0)).first.dtstart.to_s
-#  end
-#  
-#  def test_occurrences_after_with_start_before_start_at_should_return_events_with_the_correct_dtstart_values
-#    expected = (0..9).map {|delta| (@event.dtstart + delta).to_s}
-#    assert_equal expected, @event.occurrences_starting(Time.utc(1997, 9, 2, 8, 30, 0, 0)).map {|occurence| occurence.dtstart.to_s}
-#  end
+
+  def test_occurrences_between_should_return_occurrences_between_start_and_end
+    expected = 5
+    start_time = Time.utc(1997, 9, 2, 8, 30, 0, 0)
+    end_time = Time.utc(1997, 9, 7, 8, 30, 0, 0)
+    actual = @event.occurrences_between(start_time, end_time).length
+    assert_equal expected, actual
+  end
+
+  def test_occurrences_between_should_return_empty_array_if_none_are_between_start_and_end
+    start_time = Time.utc(1994, 9, 2, 8, 30, 0, 0)
+    end_time = Time.utc(1994, 9, 7, 8, 30, 0, 0)
+    actual = @event.occurrences_between(start_time, end_time)
+    assert_empty actual
+  end
 end
 
+class TestRecurringEventWithoutCount < Test::Unit::TestCase 
+  # DTSTART;TZID=US-Eastern:19970902T090000
+  # RRULE:FREQ=DAILY;COUNT=10
+  # ==> (1997 9:00 AM EDT)September 2-11
+  
+  def setup
+    src = <<EOS
+BEGIN:VCALENDAR
+METHOD:PUBLISH
+CALSCALE:GREGORIAN
+VERSION:2.0
+BEGIN:VEVENT
+UID:19970901T130000Z-123401@host.com
+DTSTAMP:19970901T1300Z
+DTSTART:19970902T090000Z
+DTEND:19970902T100000Z
+RRULE:FREQ=DAILY
+SUMMARY:Annual Employee Review
+CLASS:PRIVATE
+CATEGORIES:BUSINESS,HUMAN RESOURCES
+END:VEVENT
+END:VCALENDAR
+EOS
+    @calendar = Icalendar.parse(src).first
+    @event = @calendar.events.first
+  end
+
+  def test_event_is_parsed
+    assert_not_nil(@event)
+  end
+
+  def test_recurrence_rules_should_return_a_recurrence_rule_array
+    assert_equal 1, @event.recurrence_rules.length
+    assert_kind_of(Icalendar::RRule, @event.recurrence_rules.first)
+  end
+
+  def test_occurrences_between_should_return_occurrences_between_start_and_end
+    expected = 5
+    start_time = Time.utc(1997, 9, 2, 8, 30, 0, 0)
+    end_time = Time.utc(1997, 9, 7, 8, 30, 0, 0)
+    actual = @event.occurrences_between(start_time, end_time).length
+    assert_equal expected, actual
+  end
+end

@@ -125,5 +125,8 @@ module Icalendar
       recurrence_rules.first.occurrences_of_event_starting(self, time)
     end
 
+    def occurrences_between(start_time, end_time)
+      recurrence_rules.first.occurrences_of_event_between(self, start_time, end_time)
+    end
   end
 end
